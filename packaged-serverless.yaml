@@ -1,0 +1,343 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: '
+
+  AgentFunction
+
+  Sample SAM Template for AgentLambda
+
+  '
+Parameters:
+  LambdaSg:
+    Description: Lambda security group ID
+    Type: AWS::EC2::SecurityGroup::Id
+  LambdaSubnets:
+    Description: Lambda subnets
+    Type: List<AWS::EC2::Subnet::Id>
+  DBEndpoint:
+    Type: String
+    Description: Database endpoint
+  DBPort:
+    Type: Number
+    NoEcho: true
+    Description: Database port
+  DBName:
+    Type: String
+    NoEcho: true
+    Description: Database name
+  DBUsername:
+    Type: String
+    NoEcho: true
+    Description: Username for database access
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Description: Password for database access
+  JWTSecret:
+    Type: String
+    NoEcho: true
+    Description: Web token secret for decoding
+Globals:
+  Function:
+    Timeout: 5
+Resources:
+  AgentLambdaIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+          - Effect: Allow
+            Action:
+            - rds:*
+            Resource: '*'
+  AgentAPIResource:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+  ItinerariesFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://ss-mw-lms-store/65900f21934fb8c26eb974a732932502
+      Handler: itineraries.lambda_handler
+      Runtime: ruby2.7
+      Policies:
+      - VPCAccessPolicy: {}
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: LambdaSg
+        SubnetIds:
+          Ref: LambdaSubnets
+      Role: arn:aws:iam::160164793641:role/utopia-lambda
+      Environment:
+        Variables:
+          DB_NAME:
+            Ref: DBName
+          DB_HOST:
+            Ref: DBEndpoint
+          DB_PORT:
+            Ref: DBPort
+          DB_USER:
+            Ref: DBUsername
+          DB_PASSWORD:
+            Ref: DBPassword
+          JWT_SECRET:
+            Ref: JWTSecret
+      Events:
+        getItineraries:
+          Type: Api
+          Properties:
+            Path: /agent/itineraries
+            Method: get
+            RestApiId:
+              Ref: AgentAPIResource
+        postItineraries:
+          Type: Api
+          Properties:
+            Path: /agent/itineraries
+            Method: post
+            RestApiId:
+              Ref: AgentAPIResource
+        getItinerariesById:
+          Type: Api
+          Properties:
+            Path: /agent/itineraries/{id}
+            Method: get
+            RestApiId:
+              Ref: AgentAPIResource
+        deleteItineraries:
+          Type: Api
+          Properties:
+            Path: /agent/itineraries/{id}
+            Method: delete
+            RestApiId:
+              Ref: AgentAPIResource
+  TicketsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://ss-mw-lms-store/65900f21934fb8c26eb974a732932502
+      Handler: tickets.lambda_handler
+      Runtime: ruby2.7
+      Policies:
+      - VPCAccessPolicy: {}
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: LambdaSg
+        SubnetIds:
+          Ref: LambdaSubnets
+      Role: arn:aws:iam::160164793641:role/utopia-lambda
+      Environment:
+        Variables:
+          DB_NAME:
+            Ref: DBName
+          DB_HOST:
+            Ref: DBEndpoint
+          DB_PORT:
+            Ref: DBPort
+          DB_USER:
+            Ref: DBUsername
+          DB_PASSWORD:
+            Ref: DBPassword
+          JWT_SECRET:
+            Ref: JWTSecret
+      Events:
+        getTickets:
+          Type: Api
+          Properties:
+            Path: /agent/tickets/{id}
+            Method: get
+            RestApiId:
+              Ref: AgentAPIResource
+        deleteTickets:
+          Type: Api
+          Properties:
+            Path: /agent/tickets/{id}
+            Method: delete
+            RestApiId:
+              Ref: AgentAPIResource
+  TravelersFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://ss-mw-lms-store/65900f21934fb8c26eb974a732932502
+      Handler: travelers.lambda_handler
+      Runtime: ruby2.7
+      Policies:
+      - VPCAccessPolicy: {}
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: LambdaSg
+        SubnetIds:
+          Ref: LambdaSubnets
+      Role: arn:aws:iam::160164793641:role/utopia-lambda
+      Environment:
+        Variables:
+          DB_NAME:
+            Ref: DBName
+          DB_HOST:
+            Ref: DBEndpoint
+          DB_PORT:
+            Ref: DBPort
+          DB_USER:
+            Ref: DBUsername
+          DB_PASSWORD:
+            Ref: DBPassword
+          JWT_SECRET:
+            Ref: JWTSecret
+      Events:
+        getTravelers:
+          Type: Api
+          Properties:
+            Path: /agent/travelers
+            Method: get
+            RestApiId:
+              Ref: AgentAPIResource
+        postTravelers:
+          Type: Api
+          Properties:
+            Path: /agent/travelers
+            Method: post
+            RestApiId:
+              Ref: AgentAPIResource
+        getTravelersById:
+          Type: Api
+          Properties:
+            Path: /agent/travelers/{id}
+            Method: get
+            RestApiId:
+              Ref: AgentAPIResource
+        putTravelers:
+          Type: Api
+          Properties:
+            Path: /agent/travelers
+            Method: put
+            RestApiId:
+              Ref: AgentAPIResource
+  TravelersSearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://ss-mw-lms-store/65900f21934fb8c26eb974a732932502
+      Handler: travelers_search.lambda_handler
+      Runtime: ruby2.7
+      Policies:
+      - VPCAccessPolicy: {}
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: LambdaSg
+        SubnetIds:
+          Ref: LambdaSubnets
+      Role: arn:aws:iam::160164793641:role/utopia-lambda
+      Environment:
+        Variables:
+          DB_NAME:
+            Ref: DBName
+          DB_HOST:
+            Ref: DBEndpoint
+          DB_PORT:
+            Ref: DBPort
+          DB_USER:
+            Ref: DBUsername
+          DB_PASSWORD:
+            Ref: DBPassword
+          JWT_SECRET:
+            Ref: JWTSecret
+      Events:
+        postTravelersSearch:
+          Type: Api
+          Properties:
+            Path: /agent/travelers/search
+            Method: post
+            RestApiId:
+              Ref: AgentAPIResource
+  FlightsSearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: s3://ss-mw-lms-store/65900f21934fb8c26eb974a732932502
+      Handler: flights_search.lambda_handler
+      Runtime: ruby2.7
+      Policies:
+      - VPCAccessPolicy: {}
+      VpcConfig:
+        SecurityGroupIds:
+        - Ref: LambdaSg
+        SubnetIds:
+          Ref: LambdaSubnets
+      Role: arn:aws:iam::160164793641:role/utopia-lambda
+      Environment:
+        Variables:
+          DB_NAME:
+            Ref: DBName
+          DB_HOST:
+            Ref: DBEndpoint
+          DB_PORT:
+            Ref: DBPort
+          DB_USER:
+            Ref: DBUsername
+          DB_PASSWORD:
+            Ref: DBPassword
+          JWT_SECRET:
+            Ref: JWTSecret
+      Events:
+        postFlightsSearch:
+          Type: Api
+          Properties:
+            Path: /agent/flights/search
+            Method: post
+            RestApiId:
+              Ref: AgentAPIResource
+Outputs:
+  AgentAPIResource:
+    Description: API Gateway endpoint URL for Prod stage for HelloWorld function
+    Value:
+      Fn::Sub: https://${AgentAPIResource}.execute-api.${AWS::Region}.amazonaws.com/Prod/hello/
+  ItinerariesFunction:
+    Description: Utopia ARS Agent:Itinerarries Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - ItinerariesFunction
+      - Arn
+  TicketsFunction:
+    Description: Utopia ARS Agent:Tickets Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - TicketsFunction
+      - Arn
+  TravelersFunction:
+    Description: Utopia ARS Agent:Travelers Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - TravelersFunction
+      - Arn
+  TravelersSearchFunction:
+    Description: Utopia ARS Agent:TravelersSearch Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - TravelersSearchFunction
+      - Arn
+  FlightsSearchFunction:
+    Description: Utopia ARS Agent:Flights Lambda Function ARN
+    Value:
+      Fn::GetAtt:
+      - FlightsSearchFunction
+      - Arn
+  AgentLambdaIamRole:
+    Description: Implicit IAM Role created for Agent functions
+    Value:
+      Fn::GetAtt:
+      - AgentLambdaIamRole
+      - Arn

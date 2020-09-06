@@ -1,0 +1,22 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    json (2.3.0)
+    jwt (2.2.1)
+    mysql2 (0.5.3)
+    sequel (5.29.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  json
+  jwt
+  mysql2
+  sequel
+
+RUBY VERSION
+   ruby 2.7.0p0
+
+BUNDLED WITH
+   2.1.4
